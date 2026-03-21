@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDV LaChapa - Gestão de Pedidos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/kanban.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="/static/images/logo.png" alt="LaChapa" height="40">
+                PDV LaChapa
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="bi bi-kanban"></i> Pedidos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="bi bi-cart"></i> Novo Pedido</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="bi bi-gear"></i> Configurações</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <button class="btn btn-outline-light me-2" type="button">
+                        <i class="bi bi-printer"></i> Impressora
+                    </button>
+                    <button class="btn btn-light" type="button">
+                        <i class="bi bi-person-circle"></i> Usuário
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-3">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <h2>Meus Pedidos</h2>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="input-group w-50 float-end">
+                    <input type="text" class="form-control" placeholder="Buscar pelo cliente">
+                    <button class="btn btn-primary" type="button"><i class="bi bi-search"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row kanban-board">
+            <!-- Coluna 1: Em análise -->
+            <div class="col-md-4 kanban-column">
+                <div class="card">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0">Em análise <span class="badge bg-light text-dark" id="count-em-analise">1</span></h5>
+                    </div>
+                    <div class="card-body kanban-column-body" id="em-analise">
+                        <!-- Pedido de exemplo -->
+                        <div class="card mb-3 kanban-item" data-id="1">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>Pedido #20250601-1234</span>
+                                <span class="text-muted">15:15</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <strong>Cliente:</strong> João Silva<br>
+                                    <strong>Telefone:</strong> (11) 99999-9999
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Delivery:</strong> Av. Paulista, 1000
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Total: R$ 35,90</span>
+                                    <span class="badge bg-info">Cartão</span>
+                                </div>
+                                <div class="mt-3 d-flex justify-content-between">
+                                    <button class="btn btn-sm btn-outline-secondary">Detalhes</button>
+                                    <button class="btn btn-sm btn-success avancar-pedido" data-id="1">Aprovar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna 2: Em produção -->
+            <div class="col-md-4 kanban-column">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Em produção <span class="badge bg-light text-dark" id="count-em-producao">1</span></h5>
+                    </div>
+                    <div class="card-body kanban-column-body" id="em-producao">
+                        <!-- Pedido de exemplo -->
+                        <div class="card mb-3 kanban-item" data-id="2">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>Pedido #20250601-5678</span>
+                                <span class="text-muted">15:17</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <strong>Cliente:</strong> Maria Oliveira<br>
+                                    <strong>Telefone:</strong> (11) 98888-8888
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Delivery:</strong> Avenida Brigadeiro Faria Lima, 500
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">Total: R$ 57,50</span>
+                                    <span class="badge bg-success">Dinheiro</span>
+                                </div>
+                                <div class="mt-3 d-flex justify-content-between">
+                                    <button class="btn btn-sm btn-outline-secondary">Detalhes</button>
+                                    <button class="btn btn-sm btn-primary avancar-pedido" data-id="2">Avançar pedido</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna 3: Foi pra entrega -->
+            <div class="col-md-4 kanban-column">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Foi pra entrega <span class="badge bg-light text-dark" id="count-em-entrega">0</span></h5>
+                    </div>
+                    <div class="card-body kanban-column-body" id="em-entrega">
+                        <!-- Pedidos em entrega aparecerão aqui -->
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-truck" style="font-size: 2rem;"></i>
+                            <p class="mt-2">Nenhum pedido em entrega no momento</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Pedido -->
+    <div class="modal fade" id="modalDetalhesPedido" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalhes do Pedido #20250601-1234</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6>Informações do Cliente</h6>
+                            <p>
+                                <strong>Nome:</strong> João Silva<br>
+                                <strong>Telefone:</strong> (11) 99999-9999<br>
+                                <strong>Endereço:</strong> Av. Paulista, 1000<br>
+                                <strong>Método de Pagamento:</strong> Cartão
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Informações do Pedido</h6>
+                            <p>
+                                <strong>Número:</strong> #20250601-1234<br>
+                                <strong>Data/Hora:</strong> 01/06/2025 15:15<br>
+                                <strong>Status:</strong> <span class="badge bg-warning">Em análise</span><br>
+                                <strong>Origem:</strong> App
+                            </p>
+                        </div>
+                    </div>
+                    <h6>Itens do Pedido</h6>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qtd</th>
+                                <th>Valor Unit.</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>X-Tudo</td>
+                                <td>1</td>
+                                <td>R$ 25,90</td>
+                                <td>R$ 25,90</td>
+                            </tr>
+                            <tr>
+                                <td>Refrigerante Lata</td>
+                                <td>1</td>
+                                <td>R$ 6,00</td>
+                                <td>R$ 6,00</td>
+                            </tr>
+                            <tr>
+                                <td>Batata Frita P</td>
+                                <td>1</td>
+                                <td>R$ 4,00</td>
+                                <td>R$ 4,00</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="3" class="text-end">Total:</th>
+                                <th>R$ 35,90</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <div class="mb-3">
+                        <h6>Observações</h6>
+                        <p>Sem cebola no X-Tudo. Entregar com guardanapos extras.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" id="btnImprimir">Imprimir Comanda</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/kanban.js"></script>
+</body>
+</html>

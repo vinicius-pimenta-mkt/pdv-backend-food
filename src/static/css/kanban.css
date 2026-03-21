@@ -1,0 +1,67 @@
+.kanban-board {
+    min-height: calc(100vh - 150px);
+}
+
+.kanban-column {
+    margin-bottom: 20px;
+}
+
+.kanban-column-body {
+    min-height: 300px;
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+}
+
+.kanban-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.kanban-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.badge {
+    font-size: 0.8rem;
+}
+
+/* Cores personalizadas para status */
+.bg-warning {
+    background-color: #ff9800 !important;
+}
+
+.bg-primary {
+    background-color: #2196f3 !important;
+}
+
+.bg-success {
+    background-color: #4caf50 !important;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+    .kanban-column {
+        margin-bottom: 15px;
+    }
+    
+    .kanban-column-body {
+        max-height: 400px;
+    }
+}
+
+/* Animações para movimentação de cards */
+.card-move {
+    animation: cardMove 0.5s ease;
+}
+
+@keyframes cardMove {
+    0% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
