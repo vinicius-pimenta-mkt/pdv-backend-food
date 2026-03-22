@@ -42,5 +42,7 @@ def serve(path):
         else:
             return "index.html not found", 404
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == "__main__":
+    # Isso só roda se você executar "python main.py" manualmente no console
+    # O Gunicorn ignora essa parte, o que é ótimo para estabilidade
+    app.run(host='0.0.0.0', port=80)
