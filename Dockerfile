@@ -1,25 +1,24 @@
 FROM python:3.12-slim
 
-# Instala bibliotecas necessárias para o MySQL
+WORKDIR /app
+
+# Instala dependências de sistema para o MySQL
 RUN apt-get update && apt-get install -y \
     gcc \
     default-libmysqlclient-dev \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-
-# Copia e instala as dependências
+# Copia o requirements e instala TUDO, incluindo o pymysql explicitamente
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-# Garante que o gunicorn e mysqlclient estejam instalados
-RUN pip install gunicorn mysqlclient Flask-SQLAlchemy
+RUN pip install pymysql cryptography gunicorn
 
-# Copia o restante do código
+# Copia o código
 COPY . .
 
-# Define a porta (Easypanel usa 80 por padrão para HTTP)
+# Expõe a porta 80 (padrão do Easypanel)
 EXPOSE 80
 
-# O "Start Command" agora é escrito aqui:
+# Comando de inicialização apontando para a pasta src
 CMD ["gunicorn", "--chdir", "src", "main:app", "--bind", "0.0.0.0:80"]
