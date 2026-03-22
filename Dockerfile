@@ -1,6 +1,18 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
+
 WORKDIR /app
-COPY . .
+
+# Instala dependências do sistema se necessário (ex: para banco de dados)
+RUN apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-EXPOSE 5000
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "src.main:app"]
+
+# Copia tudo para o container
+COPY . .
+
+# Expõe a porta que o Easypanel vai usar
+EXPOSE 80
+
+# Comando para rodar direto da pasta src
+CMD ["gunicorn", "--chdir", "src", "main:app", "--bind", "0.0.0.0:80"]
