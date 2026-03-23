@@ -90,3 +90,11 @@ psycopg2-binary==2.9.10
 pymysql
 cryptography
 Flask-Cors
+flask
+flask-cors
+flask-sqlalchemy
+pymysql
+cryptography
+gunicorn
+werkzeug
+PyJWT
