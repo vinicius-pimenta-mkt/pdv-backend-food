@@ -1,13 +1,9 @@
 import os
 import sys
 import logging
-from dotenv import load_dotenv
 
 # DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-# Carregar variáveis de ambiente
-load_dotenv()
 
 from flask import Flask, jsonify
 from flask_cors import CORS
@@ -41,17 +37,27 @@ app.config['JSON_SORT_KEYS'] = False
 # ============================================
 # CONFIGURAÇÃO DO BANCO DE DADOS
 # ============================================
-# 1. Configurar o Banco de Dados PRIMEIRO
-db_username = os.getenv('DB_USERNAME', 'root')
-db_password = os.getenv('DB_PASSWORD', 'password')
-db_host = os.getenv('DB_HOST', 'localhost')
-db_port = os.getenv('DB_PORT', '3306')
-db_name = os.getenv('DB_NAME', 'pdv_lachapa')
+# Obter configurações do banco de dados das variáveis de ambiente
+# Suporta DATABASE_URL ou variáveis individuais
 
-# Suportar diferentes drivers de banco de dados
-db_driver = os.getenv('DB_DRIVER', 'mysql+pymysql')
+database_url = os.getenv('DATABASE_URL')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f"{db_driver}://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
+if database_url:
+    # Se DATABASE_URL estiver definida, usar ela
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    logger.info(f"✓ Usando DATABASE_URL")
+else:
+    # Caso contrário, construir a partir de variáveis individuais
+    db_driver = os.getenv('DB_DRIVER', 'mysql+pymysql')
+    db_username = os.getenv('DB_USERNAME', 'root')
+    db_password = os.getenv('DB_PASSWORD', 'password')
+    db_host = os.getenv('DB_HOST', 'localhost')
+    db_port = os.getenv('DB_PORT', '3306')
+    db_name = os.getenv('DB_NAME', 'pdv_lachapa')
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"{db_driver}://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
+    logger.info(f"✓ Usando variáveis individuais de banco de dados")
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_size': 10,
@@ -59,25 +65,24 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
 }
 
-# 2. Inicializar o Banco de Dados com o app
+# Inicializar o Banco de Dados com o app
 db.init_app(app)
 
 # ============================================
 # IMPORTAR E REGISTRAR ROTAS
 # ============================================
-# 3. Importar e registrar rotas DEPOIS do init_app
 try:
     from src.routes.user import user_bp
     from src.routes.pedido import pedido_bp
     from src.routes.impressora import impressora_bp
     from src.routes.webhook import webhook_bp
-    from src.routes.reports import reports_bp  # ← ADICIONAR ESTA LINHA
+    from src.routes.reports import reports_bp
     
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(pedido_bp, url_prefix='/api')
     app.register_blueprint(impressora_bp, url_prefix='/api/impressora')
     app.register_blueprint(webhook_bp, url_prefix='/api/webhook')
-    app.register_blueprint(reports_bp, url_prefix='/api')  # ← ADICIONAR ESTA LINHA
+    app.register_blueprint(reports_bp, url_prefix='/api')
     
     logger.info("✓ Todas as rotas registradas com sucesso")
 except ImportError as e:
@@ -87,7 +92,6 @@ except ImportError as e:
 # ============================================
 # CRIAR TABELAS NO BANCO
 # ============================================
-# 4. Criar as tabelas no banco
 with app.app_context():
     try:
         db.create_all()
@@ -107,7 +111,7 @@ def health_check():
         "status": "online",
         "message": "API do PDV LaChapa rodando perfeitamente!",
         "version": "1.0.0",
-        "environment": os.getenv('ENVIRONMENT', 'development')
+        "environment": os.getenv('ENVIRONMENT', 'production')
     }), 200
 
 @app.route('/api/health', methods=['GET'])
@@ -183,7 +187,7 @@ if __name__ == "__main__":
     host = os.getenv('HOST', '0.0.0.0')
     port = int(os.getenv('PORT', 5000))
     debug = os.getenv('DEBUG', 'False').lower() == 'true'
-    environment = os.getenv('ENVIRONMENT', 'development')
+    environment = os.getenv('ENVIRONMENT', 'production')
     
     logger.info(f"🚀 Iniciando API PDV LaChapa")
     logger.info(f"📍 Ambiente: {environment}")
