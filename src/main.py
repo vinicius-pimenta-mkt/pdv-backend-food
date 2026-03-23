@@ -18,7 +18,6 @@ app = Flask(__name__)
 # ============================================
 # CONFIGURAÇÃO DE CORS
 # ============================================
-# Habilita o CORS para todas as rotas da API
 CORS(app, resources={
     r"/api/*": {
         "origins": os.getenv('CORS_ORIGINS', '*').split(','),
@@ -37,17 +36,12 @@ app.config['JSON_SORT_KEYS'] = False
 # ============================================
 # CONFIGURAÇÃO DO BANCO DE DADOS
 # ============================================
-# Obter configurações do banco de dados das variáveis de ambiente
-# Suporta DATABASE_URL ou variáveis individuais
-
 database_url = os.getenv('DATABASE_URL')
 
 if database_url:
-    # Se DATABASE_URL estiver definida, usar ela
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     logger.info(f"✓ Usando DATABASE_URL")
 else:
-    # Caso contrário, construir a partir de variáveis individuais
     db_driver = os.getenv('DB_DRIVER', 'mysql+pymysql')
     db_username = os.getenv('DB_USERNAME', 'root')
     db_password = os.getenv('DB_PASSWORD', 'password')
@@ -77,12 +71,14 @@ try:
     from src.routes.impressora import impressora_bp
     from src.routes.webhook import webhook_bp
     from src.routes.reports import reports_bp
+    from src.routes.auth import auth_bp  # NOVO: Rota de autenticação
     
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(pedido_bp, url_prefix='/api')
     app.register_blueprint(impressora_bp, url_prefix='/api/impressora')
     app.register_blueprint(webhook_bp, url_prefix='/api/webhook')
     app.register_blueprint(reports_bp, url_prefix='/api')
+    app.register_blueprint(auth_bp, url_prefix='/api')  # NOVO
     
     logger.info("✓ Todas as rotas registradas com sucesso")
 except ImportError as e:
@@ -90,12 +86,27 @@ except ImportError as e:
     raise
 
 # ============================================
-# CRIAR TABELAS NO BANCO
+# CRIAR TABELAS E ADMIN PADRÃO
 # ============================================
 with app.app_context():
     try:
         db.create_all()
         logger.info("✓ Tabelas do banco de dados criadas/verificadas")
+        
+        # Criar admin padrão se não existir
+        from src.models.user import User
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
+            admin = User(
+                username='admin',
+                email='admin@lachapa.com',
+                role='admin'
+            )
+            admin.set_password('123456')
+            db.session.add(admin)
+            db.session.commit()
+            logger.info("✓ Usuário admin padrão criado (admin / 123456)")
+        
     except Exception as e:
         logger.error(f"✗ Erro ao criar tabelas: {e}")
         raise
@@ -106,19 +117,16 @@ with app.app_context():
 
 @app.route('/', methods=['GET'])
 def health_check():
-    """Health check da API"""
     return jsonify({
         "status": "online",
         "message": "API do PDV LaChapa rodando perfeitamente!",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "environment": os.getenv('ENVIRONMENT', 'production')
     }), 200
 
 @app.route('/api/health', methods=['GET'])
 def api_health():
-    """Health check detalhado da API"""
     try:
-        # Testar conexão com banco de dados
         db.session.execute('SELECT 1')
         db_status = "connected"
     except Exception as e:
@@ -132,12 +140,12 @@ def api_health():
 
 @app.route('/api/info', methods=['GET'])
 def api_info():
-    """Informações sobre a API"""
     return jsonify({
         "name": "PDV LaChapa API",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "description": "API para gerenciamento de pedidos e relatórios do PDV LaChapa",
         "endpoints": {
+            "auth": "/api/auth/login",
             "pedidos": "/api/pedidos",
             "reports": "/api/reports",
             "impressora": "/api/impressora",
@@ -152,55 +160,33 @@ def api_info():
 
 @app.errorhandler(404)
 def not_found(error):
-    """Tratamento para rota não encontrada"""
-    return jsonify({
-        "success": False,
-        "error": "Rota não encontrada",
-        "message": f"O endpoint solicitado não existe"
-    }), 404
+    return jsonify({ "success": False, "error": "Rota não encontrada" }), 404
 
 @app.errorhandler(500)
 def internal_error(error):
-    """Tratamento para erro interno do servidor"""
     logger.error(f"Erro interno: {error}")
-    return jsonify({
-        "success": False,
-        "error": "Erro interno do servidor",
-        "message": "Ocorreu um erro ao processar a requisição"
-    }), 500
+    return jsonify({ "success": False, "error": "Erro interno do servidor" }), 500
 
 @app.errorhandler(400)
 def bad_request(error):
-    """Tratamento para requisição inválida"""
-    return jsonify({
-        "success": False,
-        "error": "Requisição inválida",
-        "message": str(error)
-    }), 400
+    return jsonify({ "success": False, "error": "Requisição inválida", "message": str(error) }), 400
 
 # ============================================
 # INICIALIZAÇÃO
 # ============================================
 
 if __name__ == "__main__":
-    # Obter configurações do ambiente
     host = os.getenv('HOST', '0.0.0.0')
     port = int(os.getenv('PORT', 5000))
     debug = os.getenv('DEBUG', 'False').lower() == 'true'
     environment = os.getenv('ENVIRONMENT', 'production')
     
-    logger.info(f"🚀 Iniciando API PDV LaChapa")
+    logger.info(f"🚀 Iniciando API PDV LaChapa v1.1.0")
     logger.info(f"📍 Ambiente: {environment}")
     logger.info(f"🔧 Debug: {debug}")
     logger.info(f"🌐 Servidor: {host}:{port}")
     
-    # Em produção, usar gunicorn em vez de app.run()
     if environment == 'production':
         logger.warning("⚠️  Em produção, use: gunicorn -w 4 -b 0.0.0.0:5000 src.main:app")
     
-    app.run(
-        host=host,
-        port=port,
-        debug=debug,
-        use_reloader=debug
-    )
+    app.run(host=host, port=port, debug=debug, use_reloader=debug)
