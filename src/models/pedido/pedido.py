@@ -75,6 +75,85 @@ class Pedido(db.Model):
             }
             for row in result
         ]
+    
+    @classmethod
+    def get_sales_summary_by_date_range(cls, start_date, end_date):
+        """
+        Retorna um resumo de vendas (total de receita e quantidade de pedidos)
+        """
+        result = db.session.query(
+            func.sum(cls.valor_total).label('total_revenue'),
+            func.count(cls.id).label('total_orders')
+        ).filter(
+            cls.data_criacao >= start_date,
+            cls.data_criacao <= end_date
+        ).first()
+        
+        return {
+            'total_revenue': float(result.total_revenue) if result.total_revenue else 0.0,
+            'total_orders': int(result.total_orders) if result.total_orders else 0
+        }
+    
+    @classmethod
+    def get_daily_sales(cls, start_date, end_date):
+        """
+        Retorna vendas agrupadas por dia
+        """
+        result = db.session.query(
+            func.date(cls.data_criacao).label('date'),
+            func.sum(cls.valor_total).label('revenue'),
+            func.count(cls.id).label('orders')
+        ).filter(
+            cls.data_criacao >= start_date,
+            cls.data_criacao <= end_date
+        ).group_by(
+            func.date(cls.data_criacao)
+        ).order_by(
+            func.date(cls.data_criacao)
+        ).all()
+        
+        return [
+            {
+                'date': str(row.date),
+                'revenue': float(row.revenue) if row.revenue else 0.0,
+                'orders': int(row.orders) if row.orders else 0
+            }
+            for row in result
+        ]
+    
+    @classmethod
+    def get_by_status(cls, status, limit=100):
+        """
+        Retorna pedidos filtrados por status
+        """
+        return cls.query.filter_by(status=status).order_by(
+            cls.data_criacao.desc()
+        ).limit(limit).all()
+    
+    @classmethod
+    def get_by_payment_method(cls, start_date, end_date):
+        """
+        Retorna vendas agrupadas por método de pagamento
+        """
+        result = db.session.query(
+            cls.metodo_pagamento.label('method'),
+            func.sum(cls.valor_total).label('total'),
+            func.count(cls.id).label('orders')
+        ).filter(
+            cls.data_criacao >= start_date,
+            cls.data_criacao <= end_date
+        ).group_by(
+            cls.metodo_pagamento
+        ).all()
+        
+        return [
+            {
+                'method': row.method or 'Não especificado',
+                'total': float(row.total) if row.total else 0.0,
+                'orders': int(row.orders) if row.orders else 0
+            }
+            for row in result
+        ]
 
 
 class ItemPedido(db.Model):
@@ -123,9 +202,9 @@ class ItemPedido(db.Model):
         return [
             {
                 'name': row.name,
-                'quantity': int(row.quantity),
-                'revenue': float(row.revenue),
-                'average_price': float(row.average_price)
+                'quantity': int(row.quantity) if row.quantity else 0,
+                'revenue': float(row.revenue) if row.revenue else 0.0,
+                'average_price': float(row.average_price) if row.average_price else 0.0
             }
             for row in result
         ]
@@ -158,8 +237,37 @@ class ItemPedido(db.Model):
         return [
             {
                 'name': row.name,
-                'quantity': int(row.quantity),
-                'revenue': float(row.revenue)
+                'quantity': int(row.quantity) if row.quantity else 0,
+                'revenue': float(row.revenue) if row.revenue else 0.0
             }
             for row in result
         ]
+    
+    @classmethod
+    def get_product_by_name(cls, product_name, start_date, end_date):
+        """
+        Retorna dados de um produto específico dentro de um período
+        """
+        result = db.session.query(
+            cls.produto_nome.label('name'),
+            func.sum(cls.quantidade).label('quantity'),
+            func.sum(cls.quantidade * cls.valor_unitario).label('revenue'),
+            func.avg(cls.valor_unitario).label('average_price')
+        ).join(
+            Pedido, cls.pedido_id == Pedido.id
+        ).filter(
+            cls.produto_nome == product_name,
+            Pedido.data_criacao >= start_date,
+            Pedido.data_criacao <= end_date
+        ).group_by(
+            cls.produto_nome
+        ).first()
+        
+        if result:
+            return {
+                'name': result.name,
+                'quantity': int(result.quantity) if result.quantity else 0,
+                'revenue': float(result.revenue) if result.revenue else 0.0,
+                'average_price': float(result.average_price) if result.average_price else 0.0
+            }
+        return None
