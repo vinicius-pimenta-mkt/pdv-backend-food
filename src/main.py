@@ -71,13 +71,13 @@ try:
     from src.routes.pedido import pedido_bp
     from src.routes.impressora import impressora_bp
     from src.routes.webhook import webhook_bp
-    from src.routes.reports import reports_bp
+    from src.routes.reports import reports_bp  # ← ADICIONAR ESTA LINHA
     
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(pedido_bp, url_prefix='/api')
     app.register_blueprint(impressora_bp, url_prefix='/api/impressora')
     app.register_blueprint(webhook_bp, url_prefix='/api/webhook')
-    app.register_blueprint(reports_bp, url_prefix='/api')
+    app.register_blueprint(reports_bp, url_prefix='/api')  # ← ADICIONAR ESTA LINHA
     
     logger.info("✓ Todas as rotas registradas com sucesso")
 except ImportError as e:
