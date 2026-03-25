@@ -71,14 +71,14 @@ try:
     from src.routes.impressora import impressora_bp
     from src.routes.webhook import webhook_bp
     from src.routes.reports import reports_bp
-    from src.routes.auth import auth_bp  # NOVO: Rota de autenticação
+    from src.routes.auth import auth_bp
     
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(pedido_bp, url_prefix='/api')
     app.register_blueprint(impressora_bp, url_prefix='/api/impressora')
     app.register_blueprint(webhook_bp, url_prefix='/api/webhook')
     app.register_blueprint(reports_bp, url_prefix='/api')
-    app.register_blueprint(auth_bp, url_prefix='/api')  # NOVO
+    app.register_blueprint(auth_bp, url_prefix='/api')
     
     logger.info("✓ Todas as rotas registradas com sucesso")
 except ImportError as e:
@@ -127,7 +127,7 @@ def health_check():
 @app.route('/api/health', methods=['GET'])
 def api_health():
     try:
-        db.session.execute('SELECT 1')
+        db.session.execute(db.text('SELECT 1'))
         db_status = "connected"
     except Exception as e:
         db_status = f"error: {str(e)}"
