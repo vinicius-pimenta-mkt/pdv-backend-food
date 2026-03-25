@@ -43,9 +43,7 @@ class Pedido(db.Model):
     
     @classmethod
     def get_by_date_range(cls, start_date, end_date):
-        """
-        Retorna todos os pedidos dentro de um período específico
-        """
+        """Retorna todos os pedidos dentro de um período específico"""
         return cls.query.filter(
             cls.data_criacao >= start_date,
             cls.data_criacao <= end_date
@@ -53,9 +51,7 @@ class Pedido(db.Model):
     
     @classmethod
     def get_revenue_by_date(cls, start_date, end_date):
-        """
-        Retorna o faturamento agrupado por data dentro de um período
-        """
+        """Retorna o faturamento agrupado por data dentro de um período"""
         result = db.session.query(
             func.date(cls.data_criacao).label('date'),
             func.sum(cls.valor_total).label('revenue'),
@@ -78,9 +74,7 @@ class Pedido(db.Model):
     
     @classmethod
     def get_sales_summary_by_date_range(cls, start_date, end_date):
-        """
-        Retorna um resumo de vendas (total de receita e quantidade de pedidos)
-        """
+        """Retorna um resumo de vendas (total de receita e quantidade de pedidos)"""
         result = db.session.query(
             func.sum(cls.valor_total).label('total_revenue'),
             func.count(cls.id).label('total_orders')
@@ -91,69 +85,9 @@ class Pedido(db.Model):
         
         return {
             'total_revenue': float(result.total_revenue) if result.total_revenue else 0.0,
-            'total_orders': int(result.total_orders) if result.total_orders else 0
+            'total_orders': result.total_orders or 0,
+            'average_ticket': float(result.total_revenue / result.total_orders) if result.total_orders and result.total_revenue else 0.0
         }
-    
-    @classmethod
-    def get_daily_sales(cls, start_date, end_date):
-        """
-        Retorna vendas agrupadas por dia
-        """
-        result = db.session.query(
-            func.date(cls.data_criacao).label('date'),
-            func.sum(cls.valor_total).label('revenue'),
-            func.count(cls.id).label('orders')
-        ).filter(
-            cls.data_criacao >= start_date,
-            cls.data_criacao <= end_date
-        ).group_by(
-            func.date(cls.data_criacao)
-        ).order_by(
-            func.date(cls.data_criacao)
-        ).all()
-        
-        return [
-            {
-                'date': str(row.date),
-                'revenue': float(row.revenue) if row.revenue else 0.0,
-                'orders': int(row.orders) if row.orders else 0
-            }
-            for row in result
-        ]
-    
-    @classmethod
-    def get_by_status(cls, status, limit=100):
-        """
-        Retorna pedidos filtrados por status
-        """
-        return cls.query.filter_by(status=status).order_by(
-            cls.data_criacao.desc()
-        ).limit(limit).all()
-    
-    @classmethod
-    def get_by_payment_method(cls, start_date, end_date):
-        """
-        Retorna vendas agrupadas por método de pagamento
-        """
-        result = db.session.query(
-            cls.metodo_pagamento.label('method'),
-            func.sum(cls.valor_total).label('total'),
-            func.count(cls.id).label('orders')
-        ).filter(
-            cls.data_criacao >= start_date,
-            cls.data_criacao <= end_date
-        ).group_by(
-            cls.metodo_pagamento
-        ).all()
-        
-        return [
-            {
-                'method': row.method or 'Não especificado',
-                'total': float(row.total) if row.total else 0.0,
-                'orders': int(row.orders) if row.orders else 0
-            }
-            for row in result
-        ]
 
 
 class ItemPedido(db.Model):
@@ -182,9 +116,7 @@ class ItemPedido(db.Model):
     
     @classmethod
     def get_sales_by_product(cls, start_date, end_date):
-        """
-        Retorna as vendas agrupadas por produto dentro de um período
-        """
+        """Retorna as vendas agrupadas por produto dentro de um período"""
         result = db.session.query(
             cls.produto_nome.label('name'),
             func.sum(cls.quantidade).label('quantity'),
@@ -211,9 +143,7 @@ class ItemPedido(db.Model):
     
     @classmethod
     def get_top_products(cls, start_date, end_date, limit=5, by_revenue=True):
-        """
-        Retorna os produtos mais vendidos dentro de um período
-        """
+        """Retorna os produtos mais vendidos dentro de um período"""
         query = db.session.query(
             cls.produto_nome.label('name'),
             func.sum(cls.quantidade).label('quantity'),
@@ -245,9 +175,7 @@ class ItemPedido(db.Model):
     
     @classmethod
     def get_product_by_name(cls, product_name, start_date, end_date):
-        """
-        Retorna dados de um produto específico dentro de um período
-        """
+        """Retorna dados de um produto específico dentro de um período"""
         result = db.session.query(
             cls.produto_nome.label('name'),
             func.sum(cls.quantidade).label('quantity'),
