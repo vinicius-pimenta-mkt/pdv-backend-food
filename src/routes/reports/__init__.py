@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
 import json
-from ...models.pedido.pedido import Pedido, PedidoItem
+from ...models.pedido.pedido import Pedido, ItemPedido
 from ...models.produto.produto import Produto
 
 reports = Blueprint('reports', __name__)
