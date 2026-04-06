@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from flask import Flask, jsonify
 from flask_cors import CORS
-from models.user import db
+from models.user import db, User
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -72,14 +72,14 @@ try:
     from src.routes.webhook import webhook_bp
     from src.routes.reports import reports_bp
     from src.routes.auth import auth_bp
-    
+
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(pedido_bp, url_prefix='/api')
     app.register_blueprint(impressora_bp, url_prefix='/api/impressora')
     app.register_blueprint(webhook_bp, url_prefix='/api/webhook')
     app.register_blueprint(reports_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/api')
-    
+
     logger.info("✓ Todas as rotas registradas com sucesso")
 except ImportError as e:
     logger.error(f"✗ Erro ao importar rotas: {e}")
@@ -92,9 +92,8 @@ with app.app_context():
     try:
         db.create_all()
         logger.info("✓ Tabelas do banco de dados criadas/verificadas")
-        
+
         # Criar admin padrão se não existir
-        from src.models.user import User
         admin = User.query.filter_by(username='admin').first()
         if not admin:
             admin = User(
@@ -106,7 +105,7 @@ with app.app_context():
             db.session.add(admin)
             db.session.commit()
             logger.info("✓ Usuário admin padrão criado (admin / 123456)")
-        
+
     except Exception as e:
         logger.error(f"✗ Erro ao criar tabelas: {e}")
         raise
@@ -127,11 +126,12 @@ def health_check():
 @app.route('/api/health', methods=['GET'])
 def api_health():
     try:
-        db.session.execute(db.text('SELECT 1'))
+        from sqlalchemy import text
+        db.session.execute(text('SELECT 1'))
         db_status = "connected"
     except Exception as e:
         db_status = f"error: {str(e)}"
-    
+
     return jsonify({
         "status": "online",
         "database": db_status,
@@ -180,13 +180,13 @@ if __name__ == "__main__":
     port = int(os.getenv('PORT', 5000))
     debug = os.getenv('DEBUG', 'False').lower() == 'true'
     environment = os.getenv('ENVIRONMENT', 'production')
-    
+
     logger.info(f"🚀 Iniciando API PDV LaChapa v1.1.0")
     logger.info(f"📍 Ambiente: {environment}")
     logger.info(f"🔧 Debug: {debug}")
     logger.info(f"🌐 Servidor: {host}:{port}")
-    
+
     if environment == 'production':
         logger.warning("⚠️  Em produção, use: gunicorn -w 4 -b 0.0.0.0:5000 src.main:app")
-    
+
     app.run(host=host, port=port, debug=debug, use_reloader=debug)
